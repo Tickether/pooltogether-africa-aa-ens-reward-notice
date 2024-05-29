@@ -2,6 +2,7 @@ import express, { Express, Request, Response } from 'express'
 import { config } from './config.js'
 import { erc20Abi } from 'viem'
 import { watchContractEvent } from '@wagmi/core'
+import { claimerABI, prizePoolABI } from '@generationsoftware/hyperstructure-client-js'
 
 
 const app: Express = express();
@@ -11,17 +12,22 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Express + TypeScript Server");
 });
 
-const startEventWatcher = () => {
+const startEventWatcher = async() => {
   const unwatch = watchContractEvent(config, {
-    abi: erc20Abi,
+    abi: prizePoolABI,
     chainId: 8453,
-    address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-    eventName: 'Transfer',
+    address: '0x45b2010d8a4f08b53c9fa7544c51dfd9733732cb',
+    eventName: 'ClaimedPrize',
+    args: {
+      vault: '0x7f5C2b379b88499aC2B997Db583f8079503f25b9'
+    },
     onLogs(logs) {
       console.log('Logs changed!', logs)
-      //get users from pta db
+      //get user from pta db
+      //getpooler()
       //ckeck log info for address mathcing one from PTA db
-      //if match send winning info to db
+      //if match send winning info to db and send email //winner on susu.club
+      //winner not on susu club
     },
     onError(err) {
       console.log('err found!', err)

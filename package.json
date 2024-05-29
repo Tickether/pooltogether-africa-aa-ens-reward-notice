@@ -19,6 +19,7 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
+    "@generationsoftware/hyperstructure-client-js": "^1.12.10",
     "@wagmi/core": "^2.10.4",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
