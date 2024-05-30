@@ -9,11 +9,11 @@ const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`)
 
 export const publicClient = createPublicClient({
   chain: base as Chain,
-  transport: http(`https://base-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`)
+  transport: http(`https://base-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`)
 })
 
 export const walletClient = createWalletClient({
   account,
   chain: base as Chain,
-  transport: http(`https://base-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`)
+  transport: http(`https://base-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`)
 })

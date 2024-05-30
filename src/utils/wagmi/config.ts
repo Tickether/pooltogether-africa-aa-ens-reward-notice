@@ -1,5 +1,5 @@
 import { http, createConfig } from '@wagmi/core'
-import { Chain, base, mainnet } from '@wagmi/core/chains'
+import { Chain, base } from '@wagmi/core/chains'
 import dotenv from 'dotenv'
 
 dotenv.config();
