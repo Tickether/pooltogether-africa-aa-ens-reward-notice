@@ -4,3 +4,4 @@
     "ignore": ["node_modules"],
     "exec": "node --loader ts-node/esm src/index.ts"
   }
+  

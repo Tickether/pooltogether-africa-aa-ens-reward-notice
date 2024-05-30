@@ -1,8 +1,8 @@
 import express, { Express, Request, Response } from 'express'
-import { config } from './config.js'
-import { erc20Abi } from 'viem'
+import { config } from './utils/wagmi/config.js'
 import { watchContractEvent } from '@wagmi/core'
-import { claimerABI, prizePoolABI } from '@generationsoftware/hyperstructure-client-js'
+import { prizePoolABI } from '@generationsoftware/hyperstructure-client-js'
+import { getPooler } from './utils/pooler/getPooler.js'
 
 
 const app: Express = express();
@@ -23,11 +23,22 @@ const startEventWatcher = async() => {
     },
     onLogs(logs) {
       console.log('Logs changed!', logs)
-      //get user from pta db
-      //getpooler()
-      //ckeck log info for address mathcing one from PTA db
-      //if match send winning info to db and send email //winner on susu.club
-      //winner not on susu club
+      const winner = logs[0].args.winner
+      const ckeckWinnerSendEmail = async () => {
+        //get user from pta db
+        const pooler = await getPooler(winner!)
+
+        //ckeck log info for address mathcing one from PTA db
+        //if match send winning info to db and send email
+        if (pooler?.address === winner) {
+          console.log('winner on susu.club')
+          //send email
+          console.log(pooler?.email)
+        } else {
+          console.log('winner not on susu.club')
+        }
+      }
+      
     },
     onError(err) {
       console.log('err found!', err)

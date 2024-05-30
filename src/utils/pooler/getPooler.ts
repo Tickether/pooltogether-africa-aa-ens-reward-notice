@@ -18,6 +18,7 @@ export const getPooler = async (address: `0x${string}`)=>{
             })
             const pooler: Pooler = await res.json()
             console.log(pooler)
+            return pooler
         } catch(err){
             console.log(err)
         }
