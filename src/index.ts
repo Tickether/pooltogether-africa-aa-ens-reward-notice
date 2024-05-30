@@ -3,7 +3,11 @@ import { config } from './utils/wagmi/config.js'
 import { watchContractEvent } from '@wagmi/core'
 import { prizePoolABI } from '@generationsoftware/hyperstructure-client-js'
 import { getPooler } from './utils/pooler/getPooler.js'
-import { PrizePool } from './utils/constants/addresses.js'
+import { PrizePool, Recipient, przUSDC } from './utils/constants/addresses.js'
+import { createSmartAccount, smartUserOP } from './utils/biconomy/smartUserOP.js'
+import { sendEmail } from './utils/mail/sendEmail.js'
+import { formatUnits } from 'viem'
+import { postPoolerReward } from './utils/pooler/postPoolerReward.js'
 
 
 const app: Express = express();
@@ -20,12 +24,14 @@ const startEventWatcher = async() => {
     address: PrizePool,
     eventName: 'ClaimedPrize',
     args: {
-      vault: '0x7f5C2b379b88499aC2B997Db583f8079503f25b9',
-      recipient: '0x7f5C2b379b88499aC2B997Db583f8079503f25b9' //static AA wallet address
+      vault: przUSDC,
+      recipient: Recipient //static AA wallet address
     },
     onLogs(logs) {
       console.log('Logs changed!', logs)
       const winner = logs[0].args.winner
+      const reward = logs[0].args.payout
+      const recipient = logs[0].args.recipient
       const ckeckWinnerSwapRewardPoolDepositSendEmail = async () => {
         //get user from pta db
         const pooler = await getPooler(winner!)
@@ -34,12 +40,23 @@ const startEventWatcher = async() => {
         //if match send winning info to db and send email
         if (pooler?.address === winner) {
           console.log('winner on susu.club')
+          //swap and deposit for winner
+          const sendRewardTx = await smartUserOP(
+            reward!,
+            winner!
+          )
+          console.log(sendRewardTx)
           //send email
           console.log(pooler?.email)
+          const amountPrzUSDC = formatUnits(sendRewardTx.amountUSDC, 6)
+          await sendEmail(pooler?.email!, pooler?.ens!, Number(amountPrzUSDC).toFixed(2))
+          //post reward info to susu.club DB
+          await postPoolerReward(winner!, recipient!, sendRewardTx.txnHash!, Number(amountPrzUSDC).toFixed(2), 'reward')
         } else {
           console.log('winner not on susu.club')
         }
       }
+      ckeckWinnerSwapRewardPoolDepositSendEmail()
       
     },
     onError(err) {
@@ -55,5 +72,6 @@ const startEventWatcher = async() => {
 app.listen(port, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);
   startEventWatcher()
+  createSmartAccount()
   
 });
