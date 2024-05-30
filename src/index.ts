@@ -3,6 +3,7 @@ import { config } from './utils/wagmi/config.js'
 import { watchContractEvent } from '@wagmi/core'
 import { prizePoolABI } from '@generationsoftware/hyperstructure-client-js'
 import { getPooler } from './utils/pooler/getPooler.js'
+import { PrizePool } from './utils/constants/addresses.js'
 
 
 const app: Express = express();
@@ -16,15 +17,16 @@ const startEventWatcher = async() => {
   const unwatch = watchContractEvent(config, {
     abi: prizePoolABI,
     chainId: 8453,
-    address: '0x45b2010d8a4f08b53c9fa7544c51dfd9733732cb',
+    address: PrizePool,
     eventName: 'ClaimedPrize',
     args: {
-      vault: '0x7f5C2b379b88499aC2B997Db583f8079503f25b9'
+      vault: '0x7f5C2b379b88499aC2B997Db583f8079503f25b9',
+      recipient: '0x7f5C2b379b88499aC2B997Db583f8079503f25b9' //static AA wallet address
     },
     onLogs(logs) {
       console.log('Logs changed!', logs)
       const winner = logs[0].args.winner
-      const ckeckWinnerSendEmail = async () => {
+      const ckeckWinnerSwapRewardPoolDepositSendEmail = async () => {
         //get user from pta db
         const pooler = await getPooler(winner!)
 

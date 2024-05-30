@@ -35,12 +35,13 @@ export const smartUserOP = async(swapRouterParams: SwapRouterParams) => {
         fee: (500),
         sqrtPriceLimitX96: BigInt(0),
     }
-    const qoutes = await simulateContract(config, {
+    const qoute = await simulateContract(config, {
         abi: quoterABI,
         address: QUOTER,
         functionName: 'quoteExactInputSingle',
         args: [(quoterParams)],
-      })
+        account: smartAccountAddress
+    })
     const swapRewardPoolDeposit = async() => {
 
         
