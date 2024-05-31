@@ -6,7 +6,7 @@ export const postPoolerReward = async (
     txOf: string
 ) => {
     try {
-        const res = await fetch('https://susu.club/api/postDeposit', {
+        const res = await fetch('https://susu.club/api/postReward', {
             method: 'POST',
             headers: {
             'Content-type': 'application/json'
