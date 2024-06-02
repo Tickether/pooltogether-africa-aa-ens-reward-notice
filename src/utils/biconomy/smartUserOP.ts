@@ -39,69 +39,71 @@ export const createSmartAccount = async () => {
 export const smartUserOP = async(reward: bigint, pooler: `0x${string}`) => {
 
     try {
-        let txnHash
+        if (reward > BigInt(0)) {
+            let txnHash
 
-        await createSmartAccount()
+            await createSmartAccount()
 
-        //simulate quoter from uniswap
-        const quoterParams = {
-            tokenIn: (WETH),
-            tokenOut: (USDC),
-            amountIn: (reward),
-            fee: (500),
-            sqrtPriceLimitX96: BigInt(0),
-        }
-        const qoute = await simulateContract(config, {
-            abi: quoterABI,
-            address: QUOTER,
-            functionName: 'quoteExactInputSingle',
-            args: [(quoterParams)],
-            account: smartAccountAddress
-        })
-        const amountUSDC = qoute.result
-        const swapRouterParams: SwapRouterParams = {
-            tokenIn: WETH,
-            tokenOut: USDC,
-            fee: 500,
-            recipient: smartAccountAddress!,
-            amountIn: reward,
-            amountOutMinimum: qoute.result,
-            sqrtPriceLimitX96: BigInt(0)
-        }
-        const swapRewardPoolDeposit = async() => {
-            let tx = []
-            const wethForSwapAllowance = await allowanceWETH(smartAccountAddress!, SWAP_ROUTER)      
-            const usdcForDepositAllowance = await allowanceUSD(smartAccountAddress!, przUSDC)    
-            if (reward < wethForSwapAllowance || wethForSwapAllowance == BigInt(0)) {
-            const lifetimeRewardTx = approveLifeTimeReward(SWAP_ROUTER)
-            tx.push(lifetimeRewardTx)
-            } 
-            if (qoute.result < usdcForDepositAllowance || usdcForDepositAllowance == BigInt(0)) {
-                const lifetimeSwimTx = approveLifeTimeSwim(przUSDC)
-                tx.push(lifetimeSwimTx)
+            //simulate quoter from uniswap
+            const quoterParams = {
+                tokenIn: (WETH),
+                tokenOut: (USDC),
+                amountIn: (reward),
+                fee: (500),
+                sqrtPriceLimitX96: BigInt(0),
             }
-            const swapTx = swap(swapRouterParams)
-            tx.push(swapTx)
-            const depositPrzTx = deposit(qoute.result, smartAccountAddress!)
-            tx.push(depositPrzTx)
-            const transferTx = transfer(pooler, qoute.result)
-            tx.push(transferTx)
-
-            // Send the transaction and get the transaction hash
-            const userOpResponse = await smartAccount!.sendTransaction(tx, {
-                paymasterServiceData: {mode: PaymasterMode.SPONSORED},
-            });
-            const { transactionHash } = await userOpResponse.waitForTxHash();
-            console.log("Transaction Hash", transactionHash);
-            txnHash = transactionHash
-            const userOpReceipt  = await userOpResponse?.wait();
-            if(userOpReceipt?.success == 'true') { 
-                console.log("UserOp receipt", userOpReceipt)
-                console.log("Transaction receipt", userOpReceipt?.receipt)
+            const qoute = await simulateContract(config, {
+                abi: quoterABI,
+                address: QUOTER,
+                functionName: 'quoteExactInputSingle',
+                args: [(quoterParams)],
+                account: smartAccountAddress
+            })
+            const amountUSDC = qoute.result
+            const swapRouterParams: SwapRouterParams = {
+                tokenIn: WETH,
+                tokenOut: USDC,
+                fee: 500,
+                recipient: smartAccountAddress!,
+                amountIn: reward,
+                amountOutMinimum: qoute.result,
+                sqrtPriceLimitX96: BigInt(0)
             }
-        }
-        await swapRewardPoolDeposit()
-        return { txnHash, amountUSDC }
+            const swapRewardPoolDeposit = async() => {
+                let tx = []
+                const wethForSwapAllowance = await allowanceWETH(smartAccountAddress!, SWAP_ROUTER)      
+                const usdcForDepositAllowance = await allowanceUSD(smartAccountAddress!, przUSDC)    
+                if (reward < wethForSwapAllowance || wethForSwapAllowance == BigInt(0)) {
+                const lifetimeRewardTx = approveLifeTimeReward(SWAP_ROUTER)
+                tx.push(lifetimeRewardTx)
+                } 
+                if (qoute.result < usdcForDepositAllowance || usdcForDepositAllowance == BigInt(0)) {
+                    const lifetimeSwimTx = approveLifeTimeSwim(przUSDC)
+                    tx.push(lifetimeSwimTx)
+                }
+                const swapTx = swap(swapRouterParams)
+                tx.push(swapTx)
+                const depositPrzTx = deposit(qoute.result, smartAccountAddress!)
+                tx.push(depositPrzTx)
+                const transferTx = transfer(pooler, qoute.result)
+                tx.push(transferTx)
+
+                // Send the transaction and get the transaction hash
+                const userOpResponse = await smartAccount!.sendTransaction(tx, {
+                    paymasterServiceData: {mode: PaymasterMode.SPONSORED},
+                });
+                const { transactionHash } = await userOpResponse.waitForTxHash();
+                console.log("Transaction Hash", transactionHash);
+                txnHash = transactionHash
+                const userOpReceipt  = await userOpResponse?.wait();
+                if(userOpReceipt?.success == 'true') { 
+                    console.log("UserOp receipt", userOpReceipt)
+                    console.log("Transaction receipt", userOpReceipt?.receipt)
+                }
+            }
+            await swapRewardPoolDeposit()
+            return { txnHash, amountUSDC }
+            }
     } catch (error) {
         console.log(error)
     }

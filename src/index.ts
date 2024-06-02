@@ -24,7 +24,6 @@ const startEventWatcher = async() => {
     address: PrizePool,
     eventName: 'ClaimedPrize',
     args: {
-      vault: przUSDC,
       recipient: Recipient //static AA wallet address
     },
     onLogs(logs) {
