@@ -28,40 +28,47 @@ const startEventWatcher = async() => {
     },
     onLogs(logs) {
       console.log('Logs changed!', logs)
-      const winner = logs[0].args.winner
-      const reward = logs[0].args.payout
-      const recipient = logs[0].args.recipient
-      const ckeckWinnerSwapRewardPoolDepositSendEmail = async () => {
-        //get user from pta db
-        const pooler = await getPooler(winner!)
-
-        //ckeck log info for address mathcing one from PTA db
-        //if match send winning info to db and send email
-        if (pooler?.address === winner) {
-          console.log('winner on susu.club')
-          //swap and deposit for winner
-          const sendRewardTx = await smartUserOP(
-            reward!,
-            winner!
-          )
-          console.log(sendRewardTx)
-          //send email
-          console.log(pooler?.email)
-          const amountPrzUSDC = formatUnits(sendRewardTx?.amountUSDC!, 6)
-          await sendEmail(pooler?.email!, pooler?.ens!, Number(amountPrzUSDC).toFixed(2))
-          //post reward info to susu.club DB
-          await postPoolerReward(winner!, recipient!, sendRewardTx?.txnHash!, Number(amountPrzUSDC).toFixed(2), 'reward')
-        } else {
-          console.log('winner not on susu.club')
-          const sendRewardTx = await smartUserOP(
-            reward!,
-            winner!
-          )
-          console.log(sendRewardTx)
+      //loop logs async
+      const loopLogs = async() => {
+        for (let i = 0; i < logs.length; i++) {
+          const log = logs[i];
+          console.log(`doing log ${i}`)
+          const winner = log.args.winner
+          const reward = log.args.payout
+          const recipient = log.args.recipient
+          const ckeckWinnerSwapRewardPoolDepositSendEmail = async () => {
+            //get user from pta db
+            const pooler = await getPooler(winner!)
+  
+            //ckeck log info for address mathcing one from PTA db
+            //if match send winning info to db and send email
+            if (pooler?.address === winner) {
+              console.log('winner on susu.club')
+              //swap and deposit for winner
+              const sendRewardTx = await smartUserOP(
+                reward!,
+                winner!
+              )
+              console.log(sendRewardTx)
+              //send email
+              console.log(pooler?.email)
+              const amountPrzUSDC = formatUnits(sendRewardTx?.amountUSDC!, 6)
+              await sendEmail(pooler?.email!, pooler?.ens!, Number(amountPrzUSDC).toFixed(2))
+              //post reward info to susu.club DB
+              await postPoolerReward(winner!, recipient!, sendRewardTx?.txnHash!, Number(amountPrzUSDC).toFixed(2), 'reward')
+            } else {
+              console.log('winner not on susu.club')
+              const sendRewardTx = await smartUserOP(
+                reward!,
+                winner!
+              )
+              console.log(sendRewardTx)
+            }
+          }
+          await ckeckWinnerSwapRewardPoolDepositSendEmail()
         }
       }
-      ckeckWinnerSwapRewardPoolDepositSendEmail()
-      
+      loopLogs()
     },
     onError(err) {
       console.log('err found!', err)
