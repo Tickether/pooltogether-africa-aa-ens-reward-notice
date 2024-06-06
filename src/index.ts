@@ -12,13 +12,65 @@ import { postPoolerReward } from './utils/pooler/postPoolerReward.js'
 
 const app: Express = express();
 const port = process.env.PORT || 8000;
+let unwatch: (() => void) | undefined;
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Express + TypeScript Server");
 });
 
+const ckeckWinnerSwapRewardPoolDepositSendEmail = async (log: any, index: number) => {
+  const winner = log.args.winner
+  const reward = log.args.payout
+  if (reward! === BigInt(0)) return;
+  const recipient = log.args.recipient
+  console.log(`doing log ${index}`)
+  console.log(log)
+
+  //get user from pta db
+  const pooler = await getPooler(winner!)
+
+  //ckeck log info for address mathcing one from PTA db
+  //if match send winning info to db and send email
+  if (pooler?.address === winner) {
+    console.log('winner on susu.club')
+    //swap and deposit for winner
+    const sendRewardTx = await smartUserOP(
+      reward!,
+      winner!
+    )
+    console.log(sendRewardTx)
+    //send email
+    console.log(pooler?.email)
+    const amountPrzUSDC = formatUnits(sendRewardTx?.amountUSDC!, 6)
+    if (sendRewardTx?.txnHash) {
+      await sendEmail(pooler?.email!, pooler?.ens!, Number(amountPrzUSDC).toFixed(2))
+      //post reward info to susu.club DB
+      await postPoolerReward(winner!, recipient!, sendRewardTx?.txnHash!, Number(amountPrzUSDC).toFixed(2), 'reward')
+    }
+  } else {
+    console.log('winner not on susu.club')
+    const sendRewardTx = await smartUserOP(
+      reward!,
+      winner!
+    )
+    console.log(sendRewardTx)
+  }
+}
+const loopLogs = async(logs: any) => {
+  for (let i = 0; i < logs.length; i++) {
+    const log = logs[i];
+    await ckeckWinnerSwapRewardPoolDepositSendEmail(log, i)
+  }
+}
+
 const startEventWatcher = async() => {
-  const unwatch = watchContractEvent(config, {
+  // Unwatch previous events if already watching
+  if (unwatch) {
+    unwatch();
+    console.log("Stopped previous event watcher");
+  }
+
+  unwatch = watchContractEvent(config, {
     abi: prizePoolABI,
     chainId: 8453,
     address: PrizePool,
@@ -28,52 +80,8 @@ const startEventWatcher = async() => {
     },
     onLogs(logs) {
       
-      //loop logs 
-      const loopLogs = async() => {
-        for (let i = 0; i < logs.length; i++) {
-          
-          const log = logs[i];
-          const winner = log.args.winner
-          const reward = log.args.payout
-          const recipient = log.args.recipient
-          const ckeckWinnerSwapRewardPoolDepositSendEmail = async () => {
-            console.log(`doing log ${i}`)
-            console.log(log)
-
-            //get user from pta db
-            const pooler = await getPooler(winner!)
-  
-            //ckeck log info for address mathcing one from PTA db
-            //if match send winning info to db and send email
-            if (pooler?.address === winner) {
-              console.log('winner on susu.club')
-              //swap and deposit for winner
-              const sendRewardTx = await smartUserOP(
-                reward!,
-                winner!
-              )
-              console.log(sendRewardTx)
-              //send email
-              console.log(pooler?.email)
-              const amountPrzUSDC = formatUnits(sendRewardTx?.amountUSDC!, 6)
-              await sendEmail(pooler?.email!, pooler?.ens!, Number(amountPrzUSDC).toFixed(2))
-              //post reward info to susu.club DB
-              await postPoolerReward(winner!, recipient!, sendRewardTx?.txnHash!, Number(amountPrzUSDC).toFixed(2), 'reward')
-            } else {
-              console.log('winner not on susu.club')
-              const sendRewardTx = await smartUserOP(
-                reward!,
-                winner!
-              )
-              console.log(sendRewardTx)
-            }
-          }
-          if (reward! > BigInt(0)) {
-            await ckeckWinnerSwapRewardPoolDepositSendEmail()
-          }
-        }
-      }
-      loopLogs()
+      //loop logs
+      loopLogs(logs)
     },
     onError(err) {
       console.log('err found!', err)
