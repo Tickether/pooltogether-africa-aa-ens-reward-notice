@@ -27,16 +27,19 @@ const startEventWatcher = async() => {
       recipient: Recipient //static AA wallet address
     },
     onLogs(logs) {
-      console.log('Logs changed!', logs)
-      //loop logs async
+      
+      //loop logs 
       const loopLogs = async() => {
         for (let i = 0; i < logs.length; i++) {
+          
           const log = logs[i];
-          console.log(`doing log ${i}`)
           const winner = log.args.winner
           const reward = log.args.payout
           const recipient = log.args.recipient
           const ckeckWinnerSwapRewardPoolDepositSendEmail = async () => {
+            console.log(`doing log ${i}`)
+            console.log(log)
+
             //get user from pta db
             const pooler = await getPooler(winner!)
   
@@ -65,7 +68,9 @@ const startEventWatcher = async() => {
               console.log(sendRewardTx)
             }
           }
-          await ckeckWinnerSwapRewardPoolDepositSendEmail()
+          if (reward! > BigInt(0)) {
+            await ckeckWinnerSwapRewardPoolDepositSendEmail()
+          }
         }
       }
       loopLogs()

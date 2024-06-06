@@ -59,14 +59,14 @@ export const smartUserOP = async(reward: bigint, pooler: `0x${string}`) => {
                 args: [(quoterParams)],
                 account: smartAccountAddress
             })
-            const amountUSDC = qoute.result
+            const amountUSDC = (qoute.result * BigInt(995))/BigInt(1000)
             const swapRouterParams: SwapRouterParams = {
                 tokenIn: WETH,
                 tokenOut: USDC,
                 fee: 500,
                 recipient: smartAccountAddress!,
                 amountIn: reward,
-                amountOutMinimum: qoute.result,
+                amountOutMinimum: amountUSDC,
                 sqrtPriceLimitX96: BigInt(0)
             }
             const swapRewardPoolDeposit = async() => {
@@ -77,15 +77,15 @@ export const smartUserOP = async(reward: bigint, pooler: `0x${string}`) => {
                 const lifetimeRewardTx = approveLifeTimeReward(SWAP_ROUTER)
                 tx.push(lifetimeRewardTx)
                 } 
-                if (qoute.result < usdcForDepositAllowance || usdcForDepositAllowance == BigInt(0)) {
+                if (amountUSDC < usdcForDepositAllowance || usdcForDepositAllowance == BigInt(0)) {
                     const lifetimeSwimTx = approveLifeTimeSwim(przUSDC)
                     tx.push(lifetimeSwimTx)
                 }
                 const swapTx = swap(swapRouterParams)
                 tx.push(swapTx)
-                const depositPrzTx = deposit(qoute.result, smartAccountAddress!)
+                const depositPrzTx = deposit(amountUSDC, smartAccountAddress!)
                 tx.push(depositPrzTx)
-                const transferTx = transfer(pooler, qoute.result)
+                const transferTx = transfer(pooler, amountUSDC)
                 tx.push(transferTx)
 
                 // Send the transaction and get the transaction hash
