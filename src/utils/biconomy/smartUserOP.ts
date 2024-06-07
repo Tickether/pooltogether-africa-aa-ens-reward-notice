@@ -97,7 +97,7 @@ const swapRewardPoolDeposit = async(reward: bigint, pooler: `0x${string}`) => {
 export const smartUserOP = async(reward: bigint, pooler: `0x${string}`) => {
 
     try {
-        if (reward > BigInt(0)) return;
+        if (reward <= BigInt(0)) return;
             
         await createSmartAccount()
 
