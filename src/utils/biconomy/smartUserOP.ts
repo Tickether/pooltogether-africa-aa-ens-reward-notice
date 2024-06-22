@@ -3,14 +3,13 @@ import { BiconomySmartAccountV2, PaymasterMode, createSmartAccountClient } from 
 import dotenv from 'dotenv'
 import { config } from '../wagmi/config.js';
 import { simulateContract } from '@wagmi/core';
-import { QUOTER, SWAP_ROUTER, USDC, WETH, przUSDC } from '../constants/addresses.js';
+import { QUOTER, SWAP_ROUTER, USDC, WETH, suPrzUSDC } from '../constants/addresses.js';
 import { quoterABI } from '../abis/quoterABI.js';
 import { SwapRouterParams } from '../abis/swapRouterABI.js';
 import { allowanceUSD, allowanceWETH } from '../reward/allowance.js';
 import { approveLifeTimeReward, approveLifeTimeSwim } from '../reward/approve.js';
 import { swap } from '../reward/swap.js';
 import { deposit } from '../reward/deposit.js';
-import { transfer } from '../reward/transfer.js';
 
 dotenv.config();
 
@@ -64,21 +63,19 @@ const swapRewardPoolDeposit = async(reward: bigint, pooler: `0x${string}`) => {
     }
     let tx = []
     const wethForSwapAllowance = await allowanceWETH(smartAccountAddress!, SWAP_ROUTER)      
-    const usdcForDepositAllowance = await allowanceUSD(smartAccountAddress!, przUSDC)    
+    const usdcForDepositAllowance = await allowanceUSD(smartAccountAddress!, suPrzUSDC)    
     if (reward > wethForSwapAllowance || wethForSwapAllowance == BigInt(0)) {
     const lifetimeRewardTx = approveLifeTimeReward(SWAP_ROUTER)
     tx.push(lifetimeRewardTx)
     } 
     if (amountUSDC > usdcForDepositAllowance || usdcForDepositAllowance == BigInt(0)) {
-        const lifetimeSwimTx = approveLifeTimeSwim(przUSDC)
+        const lifetimeSwimTx = approveLifeTimeSwim(suPrzUSDC)
         tx.push(lifetimeSwimTx)
     }
     const swapTx = swap(swapRouterParams)
     tx.push(swapTx)
-    const depositPrzTx = deposit(amountUSDC, smartAccountAddress!)
+    const depositPrzTx = deposit(amountUSDC, pooler!)
     tx.push(depositPrzTx)
-    const transferTx = transfer(pooler, amountUSDC)
-    tx.push(transferTx)
 
     // Send the transaction and get the transaction hash
     const userOpResponse = await smartAccount!.sendTransaction(tx, {

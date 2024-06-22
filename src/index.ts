@@ -3,7 +3,7 @@ import { config } from './utils/wagmi/config.js'
 import { watchContractEvent } from '@wagmi/core'
 import { prizePoolABI } from '@generationsoftware/hyperstructure-client-js'
 import { getPooler } from './utils/pooler/getPooler.js'
-import { PrizePool, Recipient, przUSDC } from './utils/constants/addresses.js'
+import { PrizePool, Recipient, suPrzUSDC } from './utils/constants/addresses.js'
 import { createSmartAccount, smartUserOP } from './utils/biconomy/smartUserOP.js'
 import { sendEmail } from './utils/mail/sendEmail.js'
 import { formatUnits } from 'viem'
@@ -47,7 +47,9 @@ const ckeckWinnerSwapRewardPoolDepositSendEmail = async (log: any, index: number
       //post reward info to susu.club DB
       await postPoolerReward(winner!, recipient!, sendRewardTx?.txnHash!, Number(amountPrzUSDC).toFixed(2), 'reward')
     }
-  } else {
+  } 
+  /*
+  else {
     console.log('winner not on susu.club')
     const sendRewardTx = await smartUserOP(
       reward!,
@@ -55,6 +57,7 @@ const ckeckWinnerSwapRewardPoolDepositSendEmail = async (log: any, index: number
     )
     console.log(sendRewardTx)
   }
+  */
 }
 const loopLogs = async(logs: any) => {
   for (let i = 0; i < logs.length; i++) {

@@ -1,5 +1,5 @@
 import { encodeFunctionData } from 'viem';
-import { przUSDC } from '../constants/addresses.js';
+import { suPrzUSDC } from '../constants/addresses.js';
 import { vaultABI } from '@generationsoftware/hyperstructure-client-js';
 
 export const deposit = (amount: bigint, address: `0x${string}`) => {
@@ -11,7 +11,7 @@ export const deposit = (amount: bigint, address: `0x${string}`) => {
 
     // Build the transactions
     const depositTx = {
-        to: przUSDC,
+        to: suPrzUSDC,
         data: depositData,
     };
     return depositTx
